@@ -1,5 +1,7 @@
 const fs = require("fs");
 const http = require("http");
+const url = require("url");
+
 const replaceTemplate = require("./modules/replaceTemplate");
 
 const tempOverview = fs.readFileSync(
@@ -22,11 +24,11 @@ const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, "utf-8");
 const dataObj = JSON.parse(data);
 
 const server = http.createServer((req, res) => {
-  const pathName = req.url;
+  const { query, pathname } = url.parse(req.url, true);
 
-  switch (pathName) {
+  switch (pathname) {
     case "/":
-    case "/overview":
+    case "/overview": {
       res.writeHead(200, {
         "Content-type": "text/html",
       });
@@ -38,9 +40,16 @@ const server = http.createServer((req, res) => {
 
       res.end(output);
       break;
-    case "/product":
-      res.end("this is product");
+    }
+    case "/product": {
+      const product = dataObj[query.id];
+      res.writeHead(200, {
+        "Content-type": "text/html",
+      });
+      const output = replaceTemplate(tempProduct, product);
+      res.end(output);
       break;
+    }
     case "/api":
       res.writeHead(200, {
         "Content-type": "application/json",
